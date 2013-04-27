@@ -1,0 +1,9 @@
+metrics:
+  enabled: true
+mysql:
+  enabled: true
+  hostname: localhost
+  port: 3306
+  database: your_database
+  username: root
+  password: root

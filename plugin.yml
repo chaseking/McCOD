@@ -1,0 +1,10 @@
+name: McCOD
+main: com.chasechocolate.mccod.McCOD
+version: 03.27.13
+commands:
+  callofduty:
+    usage: /callofduty <command> [args]
+    description: Main McCOD command.
+  cod:
+    usage: /cod <command> [args]
+    description: Alias McCOD command.

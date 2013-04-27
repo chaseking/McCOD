@@ -1,0 +1,9 @@
+#Default guns.yml configuration:
+#Format:
+#<name>:
+#  damage: <damage> (1 = 0.5 hearts, 2 = 1 heart)
+#  item: <item id>
+
+ak47:
+  damage: 8
+  item: 292
