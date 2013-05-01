@@ -28,6 +28,7 @@ public class Localization {
 	
 	public static final Permission CMD_JOIN_PERM = new Permission("mccod.command.play");
 	public static final Permission CMD_LEAVE_PERM = new Permission("mccod.command.play");
+	public static final Permission CMD_ARENA_PERM = new Permission("mccod.command.arena");
 	public static final Permission CMD_MAP_PERM = new Permission("mccod.command.map");
 	public static final Permission CMD_SETSPAWN_PERM = new Permission("mccod.command.setspawn");
 

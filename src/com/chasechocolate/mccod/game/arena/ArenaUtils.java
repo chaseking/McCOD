@@ -28,18 +28,6 @@ public class ArenaUtils {
 		}
 	}
 	
-	public static List<CODPlayer> getAllActivePlayers(){
-		List<CODPlayer> allPlayers = new ArrayList<CODPlayer>();
-		
-		for(Arena arena : ArenaUtils.getCurrentArenas()){
-			for(CODPlayer player : arena.getAllPlayers()){
-				allPlayers.add(player);
-			}
-		}
-		
-		return allPlayers;
-	}
-	
 	public static Arena getPlayerArena(Player player){
 		Arena playerArena = null;
 		

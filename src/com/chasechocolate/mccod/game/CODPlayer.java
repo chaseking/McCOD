@@ -10,7 +10,7 @@ import com.chasechocolate.mccod.game.arena.Arena;
 import com.chasechocolate.mccod.game.arena.ArenaUtils;
 import com.chasechocolate.mccod.game.map.Map;
 import com.chasechocolate.mccod.utils.LocationUtils;
-import com.chasechocolate.mccod.utils.PlayerStatistics;
+import com.chasechocolate.mccod.utils.PlayerStats;
 import com.chasechocolate.mccod.utils.PlayerUtils;
 
 public class CODPlayer { //Thanks to chaseoes for inspiring me to add this class! Some method/variable ideas I don't take credit for! :)
@@ -32,7 +32,7 @@ public class CODPlayer { //Thanks to chaseoes for inspiring me to add this class
 	
 	private Set<Integer> killstreaks;
 	
-	private PlayerStatistics stats;
+	private PlayerStats stats;
 	
 	private Gun gun;
 	
@@ -49,7 +49,7 @@ public class CODPlayer { //Thanks to chaseoes for inspiring me to add this class
 		this.inGame = false;
 		this.invincible = false;
 		this.killstreaks = new HashSet<Integer>();
-		this.stats = new PlayerStatistics(player);
+		this.stats = new PlayerStats(player);
 	}
 	
 	public Arena getArena(){
@@ -128,7 +128,7 @@ public class CODPlayer { //Thanks to chaseoes for inspiring me to add this class
 		this.currentKillstreak = killstreak;
 	}
 	
-	public PlayerStatistics getStats(){
+	public PlayerStats getStats(){
 		return this.stats;
 	}
 	

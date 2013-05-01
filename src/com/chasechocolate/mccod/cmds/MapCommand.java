@@ -8,14 +8,12 @@ import org.bukkit.entity.Player;
 import com.chasechocolate.mccod.McCOD;
 import com.chasechocolate.mccod.game.map.MapUtils;
 
-public class MapCommand {
-	@SuppressWarnings("unused")
-	private McCOD plugin;
-	
+public class MapCommand extends CODCommand {
 	public MapCommand(McCOD plugin){
-		this.plugin = plugin;
+		super(plugin);
 	}
 	
+	@Override
 	public void executeCommand(CommandSender sender, Command cmd, String[] args){
 		CommandHelper helper = new CommandHelper(sender, cmd);
 		

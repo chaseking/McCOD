@@ -22,14 +22,14 @@ public class CommandManager implements CommandExecutor {
 		
 		if(args.length == 0){
 			sender.sendMessage(ChatColor.BOLD + "" + ChatColor.YELLOW + "-=- Minecraft Call of Duty -=-");
-			sender.sendMessage(ChatColor.RED + "Plugin developed by: Nauss (IGN) or chasechocolate (Bukkit)");
-			sender.sendMessage(ChatColor.AQUA + "Use " + ChatColor.DARK_AQUA + "/cod help" + ChatColor.AQUA + " for plugin help.");
+			sender.sendMessage(ChatColor.RED + "Plugin developed by: Nauss (IGN) AKA chasechocolate (Bukkit)");
+			sender.sendMessage(ChatColor.AQUA + "Use " + ChatColor.DARK_AQUA + "/cod help" + ChatColor.AQUA + " for a list of commands.");
 			
 			return true;
 		}
 		
 		if(args[0].equalsIgnoreCase("help")){
-			plugin.gameManager.givePluginInfo(sender);
+			new HelpCommand(plugin).executeCommand(sender, cmd, args);
 		}
 		
 		if(args[0].equalsIgnoreCase("join")){
@@ -60,10 +60,32 @@ public class CommandManager implements CommandExecutor {
 			return true;
 		}
 		
+		if(args[0].equalsIgnoreCase("gun")){
+			if(sender instanceof Player){
+				new GunCommand(plugin).executeCommand(sender, cmd, args);
+			} else {
+				helper.noConsole();
+			}
+		}
+		
 		if(args[0].equalsIgnoreCase("map")){
 			if(sender.hasPermission(Localization.CMD_MAP_PERM)){
 				if(sender instanceof Player){
 					new MapCommand(plugin).executeCommand(sender, cmd, args);
+				} else {
+					helper.noConsole();
+				}
+			} else {
+				helper.noPermission();
+			}
+			
+			return true;
+		}
+		
+		if(args[0].equalsIgnoreCase("arena")){
+			if(sender.hasPermission(Localization.CMD_ARENA_PERM)){
+				if(sender instanceof Player){
+					new ArenaCommand(plugin).executeCommand(sender, cmd, args);
 				} else {
 					helper.noConsole();
 				}

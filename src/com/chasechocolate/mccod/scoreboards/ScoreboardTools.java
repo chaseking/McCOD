@@ -15,6 +15,10 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 
 import com.chasechocolate.mccod.McCOD;
+import com.chasechocolate.mccod.game.arena.Arena;
+import com.chasechocolate.mccod.game.arena.ArenaUtils;
+import com.chasechocolate.mccod.utils.PlayerStats;
+import com.chasechocolate.mccod.utils.StatUtils;
 
 public class ScoreboardTools {
 	private static List<Scoreboard> allScoreboards = new ArrayList<Scoreboard>();
@@ -23,6 +27,7 @@ public class ScoreboardTools {
 	
 	private static ScoreboardManager manager = Bukkit.getScoreboardManager();
 	
+	@SuppressWarnings("unused")
 	private static McCOD plugin;
 	
 	public static void init(McCOD instance){
@@ -56,37 +61,41 @@ public class ScoreboardTools {
 		}
 	}
 	
+	public static Scoreboard getBlankScoreboard(){
+		Scoreboard board = manager.getNewScoreboard();
+		return board;
+	}
+	
 	public static void update(){
-		for(String playerName : plugin.inGame){
-			Player player = Bukkit.getPlayer(playerName);
-			Scoreboard board = getScoreboard(player);
-			Objective objective = board.getObjective(playerName + "-objective");
-			
-			objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-			objective.setDisplayName(ChatColor.RED + "" + ChatColor.GOLD + "Stats:");
-			
-			OfflinePlayer redScoreOffline = Bukkit.getOfflinePlayer(ChatColor.RED + "Red's Score:");
-			OfflinePlayer blueScoreOffline = Bukkit.getOfflinePlayer(ChatColor.RED + "Blue's Score:");
-			OfflinePlayer scoreNewLineOffline = Bukkit.getOfflinePlayer(ChatColor.BLACK + "----------");
-			OfflinePlayer scoreKillsOffline = Bukkit.getOfflinePlayer(ChatColor.GREEN + "Kills:");
-			OfflinePlayer scoreDeathsOffline = Bukkit.getOfflinePlayer(ChatColor.GREEN + "Deaths:");
-			OfflinePlayer scoreKillstreakOffline = Bukkit.getOfflinePlayer(ChatColor.GREEN + "Killstreak:");
-			
-			Score scoreRed = objective.getScore(redScoreOffline);
-			Score scoreBlue = objective.getScore(blueScoreOffline);
-			Score scoreNewLine = objective.getScore(scoreNewLineOffline);
-			Score scoreKills = objective.getScore(scoreKillsOffline);
-			Score scoreDeaths = objective.getScore(scoreDeathsOffline);
-			Score scoreKillstreak = objective.getScore(scoreKillstreakOffline);
-			
-			scoreRed.setScore(plugin.redScore);
-			scoreNewLine.setScore(0);
-			scoreBlue.setScore(plugin.blueScore);
-			scoreKills.setScore(plugin.playerKills.get(playerName));
-			scoreDeaths.setScore(plugin.playerDeaths.get(player.getName()));
-			scoreKillstreak.setScore(plugin.killStreaks.get(player.getName()));
-			
-			player.setScoreboard(board);
+		for(Arena arena : ArenaUtils.getCurrentArenas()){
+			for(Player player : arena.getAllPlayers()){
+				PlayerStats stats = StatUtils.getPlayerStats(player);
+				Scoreboard board = getScoreboard(player);
+				Objective objective = board.getObjective(player.getName() + "-objective");
+				
+				objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+				objective.setDisplayName(ChatColor.RED + "" + ChatColor.GOLD + "  Stats:  ");
+				
+				OfflinePlayer redScoreOffline = Bukkit.getOfflinePlayer(ChatColor.RED + "Red's Score:");
+				OfflinePlayer blueScoreOffline = Bukkit.getOfflinePlayer(ChatColor.BLUE + "Blue's Score:");
+				OfflinePlayer scoreKillsOffline = Bukkit.getOfflinePlayer(ChatColor.GREEN + "Kills:");
+				OfflinePlayer scoreDeathsOffline = Bukkit.getOfflinePlayer(ChatColor.GREEN + "Deaths:");
+				OfflinePlayer scoreKillstreakOffline = Bukkit.getOfflinePlayer(ChatColor.GREEN + "Killstreak:");
+				
+				Score scoreRed = objective.getScore(redScoreOffline);
+				Score scoreBlue = objective.getScore(blueScoreOffline);
+				Score scoreKills = objective.getScore(scoreKillsOffline);
+				Score scoreDeaths = objective.getScore(scoreDeathsOffline);
+				Score scoreKillstreak = objective.getScore(scoreKillstreakOffline);
+				
+				scoreRed.setScore(arena.getRedScore());
+				scoreBlue.setScore(arena.getBlueScore());
+				scoreKills.setScore(stats.getKills());
+				scoreDeaths.setScore(stats.getDeaths());
+				scoreKillstreak.setScore(stats.getCurrentKillstreak());
+				
+				player.setScoreboard(board);
+			}
 		}
 	}
 }

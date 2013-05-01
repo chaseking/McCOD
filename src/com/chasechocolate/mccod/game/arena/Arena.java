@@ -1,10 +1,10 @@
 package com.chasechocolate.mccod.game.arena;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -14,14 +14,13 @@ import org.bukkit.entity.Player;
 import com.chasechocolate.mccod.McCOD;
 import com.chasechocolate.mccod.effects.FireworkEffectPlayer;
 import com.chasechocolate.mccod.effects.ParticleEffects;
-import com.chasechocolate.mccod.game.CODPlayer;
+import com.chasechocolate.mccod.game.GameQueue;
 import com.chasechocolate.mccod.game.GameStatus;
 import com.chasechocolate.mccod.game.GameType;
 import com.chasechocolate.mccod.game.TeamColor;
 import com.chasechocolate.mccod.game.map.Map;
 import com.chasechocolate.mccod.timers.ArenaStartCountdown;
 import com.chasechocolate.mccod.utils.LocationUtils;
-import com.chasechocolate.mccod.utils.PlayerUtils;
 
 public class Arena {
 	private McCOD plugin;
@@ -29,6 +28,7 @@ public class Arena {
 	private String name;
 	
 	private Map map;
+	private GameQueue queue;
 	private GameType gameType;
 	private GameStatus status = GameStatus.COUNTDOWN;
 	
@@ -36,12 +36,14 @@ public class Arena {
 	private int blueScore = 0;
 	private int min = 2;
 	
+	private List<String> allPlayers = new ArrayList<String>();
+	private List<String> onRed = new ArrayList<String>();
+	private List<String> onBlue = new ArrayList<String>();
+	
 	private Random random = new Random();
-	
-	private HashMap<String, CODPlayer> allPlayers = new HashMap<String, CODPlayer>();
-	
-	public Arena(McCOD plugin, String name){
-		this.plugin = plugin;
+		
+	public Arena(String name){
+		this.plugin = McCOD.getInstance();
 		this.name = name;
 	}
 	
@@ -50,55 +52,41 @@ public class Arena {
 	}
 	
 	public void start(){
-		boolean canStart = this.allPlayers.size() >= min;
+		boolean canStart = this.getAllPlayers().size() >= min && map != null;
 		
-		if(canStart){
-			map = new Map(plugin.gameManager);
+		if(canStart){			
+			chooseTeams();
 			
-			for(CODPlayer player : getAllPlayers()){
-				player.setTeam(getRandomTeamColor());
-			}
-			
-			for(CODPlayer player : getPlayersOnTeam(TeamColor.RED)){
+			for(Player player : getPlayersOnTeam(TeamColor.RED)){
 				player.getPlayer().teleport(map.getTeamSpawn(TeamColor.RED));
-				player.setTeam(TeamColor.RED);
 				
 				player.getPlayer().sendMessage(ChatColor.RED + "You are on the red team!");
 			}
 			
-			for(CODPlayer player : getPlayersOnTeam(TeamColor.BLUE)){
+			for(Player player : getPlayersOnTeam(TeamColor.BLUE)){
 				player.getPlayer().teleport(map.getTeamSpawn(TeamColor.BLUE));
-				player.setTeam(TeamColor.BLUE);
 				
 				player.getPlayer().sendMessage(ChatColor.BLUE + "You are on the blue team!");
 			}
-			
-			for(CODPlayer player : getAllPlayers()){
-				player.setCurrentMap(map);
-				player.setPlayingGame(true);
-			}
 		} else {
-			broadcastMessage(ChatColor.RED + "Can not start! There needs to be at least " + min + " players!");
+			broadcastMessage(ChatColor.RED + "Failed to start the game, restarting countdown!");
 			startCountdown();
 		}
 	}
 	
 	public void end(){
-		for(CODPlayer player : getAllPlayers()){
-			player.teleportToLobby();
-		}
-		
 		String winningTeamName;
 		int winningTeamPoints;
+		
 		Color color;
 		Color fadeColor;
 		
 		//Get the winning team
 		if(redScore > blueScore){
 			winningTeamName = ChatColor.RED + "Red" + ChatColor.RESET + "";
-			winningTeamPoints = plugin.redScore;
+			winningTeamPoints = redScore;
 			color = Color.RED;
-			fadeColor = Color.RED;
+			fadeColor = Color.MAROON;
 		} else if(blueScore > redScore){
 			winningTeamName = ChatColor.BLUE + "Blue" + ChatColor.RESET + "";
 			winningTeamPoints = blueScore;
@@ -112,8 +100,8 @@ public class Arena {
 		}
 		
 		//Teleport the players to the lobby
-		for(CODPlayer player : getAllPlayers()){
-			player.teleportToLobby();
+		for(Player player : getAllPlayers()){
+			player.teleport(LocationUtils.getLobbyLoc());
 		}
 		
 		//Tell the players who won
@@ -126,22 +114,20 @@ public class Arena {
 		try{
 			fwPlayer.playFirework(LocationUtils.getLobbyLoc().getWorld(), LocationUtils.getLobbyLoc(), effect);
 		} catch(Exception e){
-			e.printStackTrace();
-			plugin.log("Failed to play firework effect! Error above!");
+			//Do nothing
 		}
 		
-		for(CODPlayer codPlayer : getAllPlayers()){
-			Player player = codPlayer.getPlayer();
+		for(Player Player : getAllPlayers()){
+			Player player = Player.getPlayer();
 			
 			try{
 				ParticleEffects.HEART.sendToPlayer(player, player.getLocation(), 0, 0, 0, 1, 10);
 			} catch(Exception e){
-				e.printStackTrace();
-				plugin.log("Failed to play heart effect! Error above!");
+				//Do nothing
 			}
 		}
 		
-		start();
+		startCountdown();
 	}
 	
 	public void restart(){
@@ -173,44 +159,87 @@ public class Arena {
 		}
 	}
 	
-	public List<CODPlayer> getAllPlayers(){
-		List<CODPlayer> allPlayers = new ArrayList<CODPlayer>();
+	public void chooseTeams(){
+		for(String playerName : queue.getAllInQueue()){
+			Player player = Bukkit.getPlayerExact(playerName);
+			TeamColor randomTeam = getRandomTeamColor();
+			
+			addPlayerToTeam(player, randomTeam);
+		}
+	}
+	
+	public List<Player> getAllPlayers(){
+		List<Player> allPlayers = new ArrayList<Player>();
 		
-		for(CODPlayer player : this.allPlayers.values()){
+		for(Player player : allPlayers){
 			allPlayers.add(player);
 		}
 		
 		return allPlayers;
 	}
 	
+	public boolean isPlaying(Player player){
+		boolean isPlaying = allPlayers.contains(player.getName());
+		return isPlaying;
+	}
+	
 	public void addPlayer(Player player){
-		CODPlayer codPlayer = PlayerUtils.getCODPlayer(player);
-		this.allPlayers.put(player.getName(), codPlayer);
-		
-		
+		this.allPlayers.add(player.getName());
 	}
 	
 	public void removePlayer(Player player){
-		CODPlayer codPlayer = PlayerUtils.getCODPlayer(player);
-		this.allPlayers.remove(codPlayer);
-		
-		codPlayer.teleportToLobby();
-	}
-	
-	public List<CODPlayer> getPlayersOnTeam(TeamColor team){
-		List<CODPlayer> onTeam = new ArrayList<CODPlayer>();
-		
-		for(CODPlayer player : getAllPlayers()){
-			if(player.getTeam() == team){
-				onTeam.add(player);
-			}
+		if(isPlaying(player)){
+			this.allPlayers.remove(player);
+			player.teleport(LocationUtils.getLobbyLoc());
 		}
 		
-		return onTeam;
+		if(onRed.contains(player.getName())){
+			onRed.remove(player.getName());
+		}
+		
+		if(onBlue.contains(player.getName())){
+			onBlue.remove(player.getName());
+		}
+	}
+	
+	public void addPlayerToTeam(Player player, TeamColor team){
+		if(team == TeamColor.RED){
+			onRed.add(player.getName());
+		} else if(team == TeamColor.BLUE){
+			onBlue.add(player.getName());
+		}
+	}
+	
+	public List<Player> getPlayersOnTeam(TeamColor team){
+		if(team == TeamColor.RED){
+			List<Player> playersOnRed = new ArrayList<Player>();
+			
+			for(String playerName : onRed){
+				Player player = Bukkit.getPlayer(playerName);
+				playersOnRed.add(player);
+			}
+			
+			return playersOnRed;		
+		} else if(team == TeamColor.BLUE){
+			List<Player> playersOnBlue = new ArrayList<Player>();
+			
+			for(String playerName : onBlue){
+				Player player = Bukkit.getPlayer(playerName);
+				playersOnBlue.add(player);
+			}
+			
+			return playersOnBlue;
+		} else {
+			return null;
+		}
 	}
 	
 	public Map getMap(){
 		return this.map;
+	}
+	
+	public void setMap(Map map){
+		this.map = map;
 	}
 	
 	public int getRedScore(){
@@ -230,9 +259,13 @@ public class Arena {
 	}
 	
 	public void broadcastMessage(String msg){
-		for(CODPlayer player : getAllPlayers()){
+		for(Player player : getAllPlayers()){
 			player.getPlayer().sendMessage(msg);
 		}
+	}
+	
+	public GameQueue getQueue(){
+		return this.queue;
 	}
 	
 	public GameStatus getStatus(){

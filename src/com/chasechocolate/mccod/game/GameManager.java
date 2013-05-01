@@ -1,9 +1,7 @@
 package com.chasechocolate.mccod.game;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -32,6 +30,10 @@ public class GameManager {
 	public GameManager(McCOD plugin){
 		this.plugin = plugin;
 	}
+	
+	/**
+	 * NOW AN OBSELETE CLASS! I AM ONLY SAVING IT TO MOVE SOME OF THE METHODS IN THIS CLASS!
+	 */
 	
 	public void startGame(){
 		if(canStart()){
@@ -218,54 +220,6 @@ public class GameManager {
 		
 		Location lobby = new Location(lobbyWorld, lobbyX, lobbyY, lobbyZ);
 		return lobby;
-	}
-	
-	public List<String> getAllMaps(){
-		if(plugin.locationsFile.exists()){
-			List<String> allMaps = new ArrayList<String>();
-			Set<String> maps = plugin.locationsConfiguration.getConfigurationSection("maps").getKeys(false);
-			
-			for(String map : maps){
-				allMaps.add(map);
-			}
-			
-			return allMaps;
-		} else {
-			return null;
-		}
-	}
-	
-	//Get the next map
-	public String getRandomMap(){
-		if(plugin.locationsFile.exists()){
-			String[] maps = getAllMaps().toArray(new String[0]);
-			int index = random.nextInt(getAllMaps().size());
-			String nextMap = maps[index];
-			
-			return nextMap;
-		} else {
-			return null;
-		}
-	}
-	
-	//Get the map spawn location for the specified map and team
-	public Location getSpawnLocation(String map, TeamColor team){
-		if(plugin.locationsFile.exists()){
-			String teamColor = team.toString().toLowerCase();
-			ConfigurationSection section = plugin.locationsConfiguration.getConfigurationSection("maps." + map + "." + teamColor);
-			
-			World world = plugin.getServer().getWorld(section.getString("world"));
-			int x = section.getInt("x");
-			int y = section.getInt("y");
-			int z = section.getInt("z");
-			
-			Location spawn = new Location(world, x, y, z);
-			
-			return spawn;
-		}
-		World world = Bukkit.getWorlds().get(0);
-		Location spawn = world.getSpawnLocation();
-		return spawn;
 	}
 	
 	//Set the map team spawn for the specified map

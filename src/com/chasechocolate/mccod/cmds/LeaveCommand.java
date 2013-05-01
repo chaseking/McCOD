@@ -9,14 +9,12 @@ import com.chasechocolate.mccod.McCOD;
 import com.chasechocolate.mccod.game.GameUtils;
 import com.chasechocolate.mccod.game.arena.ArenaUtils;
 
-public class LeaveCommand {
-	@SuppressWarnings("unused")
-	private McCOD plugin;
-	
+public class LeaveCommand extends CODCommand {
 	public LeaveCommand(McCOD plugin){
-		this.plugin = plugin;
+		super(plugin);
 	}
 	
+	@Override
 	public void executeCommand(CommandSender sender, Command cmd, String[] args){
 		if(sender instanceof Player){
 			Player player = (Player) sender;

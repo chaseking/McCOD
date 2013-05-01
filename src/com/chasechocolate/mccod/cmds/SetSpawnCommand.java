@@ -9,14 +9,14 @@ import org.bukkit.entity.Player;
 import com.chasechocolate.mccod.McCOD;
 import com.chasechocolate.mccod.game.TeamColor;
 import com.chasechocolate.mccod.game.map.MapUtils;
+import com.chasechocolate.mccod.utils.LocationUtils;
 
-public class SetSpawnCommand {
-	private McCOD plugin;
-	
+public class SetSpawnCommand extends CODCommand {	
 	public SetSpawnCommand(McCOD plugin){
-		this.plugin = plugin;
+		super(plugin);
 	}
 	
+	@Override
 	public void executeCommand(CommandSender sender, Command cmd, String[] args){
 		CommandHelper helper = new CommandHelper(sender, cmd);
 		Player player = (Player) sender;
@@ -26,7 +26,7 @@ public class SetSpawnCommand {
 		if(args.length == 2){
 			if(args[0].equalsIgnoreCase("setspawn")){
 				if(args[1].equalsIgnoreCase("lobby")){
-					plugin.setLobbySpawn(loc);
+					LocationUtils.setLobbyLoc(loc);
 					player.sendMessage(ChatColor.RED + "Successfully set the lobby spawn location!");
 					
 					return;
