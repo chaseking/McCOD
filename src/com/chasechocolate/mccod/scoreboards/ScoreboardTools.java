@@ -44,7 +44,7 @@ public class ScoreboardTools {
 		return board;
 	}
 	
-	public static Scoreboard createScoreboardForPlayer(String name, Player player){
+	public static Scoreboard createScoreboardForPlayer(Player player){
 		Scoreboard board = manager.getNewScoreboard();
 		board.registerNewObjective(player.getName() + "-objective", "dummy");
 		
@@ -67,10 +67,16 @@ public class ScoreboardTools {
 	}
 	
 	public static void update(){
-		for(Arena arena : ArenaUtils.getCurrentArenas()){
+		for(Arena arena : ArenaUtils.getAllArenas()){
 			for(Player player : arena.getAllPlayers()){
 				PlayerStats stats = StatUtils.getPlayerStats(player);
+				
 				Scoreboard board = getScoreboard(player);
+				
+				if(board ==  null){
+					board = createScoreboardForPlayer(player);
+				}
+				
 				Objective objective = board.getObjective(player.getName() + "-objective");
 				
 				objective.setDisplaySlot(DisplaySlot.SIDEBAR);
@@ -96,6 +102,14 @@ public class ScoreboardTools {
 				
 				player.setScoreboard(board);
 			}
+		}
+	}
+	
+	public static void removeScoreboard(Player player){
+		player.setScoreboard(getBlankScoreboard());
+		
+		if(playerScoreboards.containsKey(player.getName())){
+			playerScoreboards.remove(player.getName());
 		}
 	}
 }

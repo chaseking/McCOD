@@ -19,7 +19,7 @@ public class CODDeathEvent extends Event {
 		this.player = player;
 		this.killer = null;
 	}
-
+	
 	@Override
 	public HandlerList getHandlers(){
 		return handlers;

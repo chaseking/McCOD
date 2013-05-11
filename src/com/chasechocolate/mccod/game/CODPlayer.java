@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 
 import com.chasechocolate.mccod.game.arena.Arena;
 import com.chasechocolate.mccod.game.arena.ArenaUtils;
+import com.chasechocolate.mccod.game.gun.Gun;
 import com.chasechocolate.mccod.game.map.Map;
 import com.chasechocolate.mccod.utils.LocationUtils;
 import com.chasechocolate.mccod.utils.PlayerStats;

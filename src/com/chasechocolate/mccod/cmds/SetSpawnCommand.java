@@ -7,7 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.chasechocolate.mccod.McCOD;
-import com.chasechocolate.mccod.game.TeamColor;
+import com.chasechocolate.mccod.game.map.Map;
 import com.chasechocolate.mccod.game.map.MapUtils;
 import com.chasechocolate.mccod.utils.LocationUtils;
 
@@ -27,7 +27,7 @@ public class SetSpawnCommand extends CODCommand {
 			if(args[0].equalsIgnoreCase("setspawn")){
 				if(args[1].equalsIgnoreCase("lobby")){
 					LocationUtils.setLobbyLoc(loc);
-					player.sendMessage(ChatColor.RED + "Successfully set the lobby spawn location!");
+					player.sendMessage(ChatColor.GREEN + "Successfully set the lobby spawn location!");
 					
 					return;
 				}
@@ -39,14 +39,16 @@ public class SetSpawnCommand extends CODCommand {
 			if(args[0].equalsIgnoreCase("setspawn")){
 				if(args[1].equalsIgnoreCase("map")){
 					if(MapUtils.isMap(args[2])){
+						Map map = MapUtils.getMap(args[2]);
+						
 						if(args[3].equalsIgnoreCase("red")){
-							MapUtils.setSpawn(args[2], TeamColor.RED, loc);
-							player.sendMessage(ChatColor.RED + "Successfully set the " + args[3].toLowerCase() + " team's spawn location in the map '" + args[2] + "'!");
+							map.setRedSpawn(loc);
+							player.sendMessage(ChatColor.GREEN + "Successfully set the " + args[3].toLowerCase() + " team's spawn location in the map '" + args[2] + "'!");
 							
 							return;
 						} else if(args[3].equalsIgnoreCase("blue")){
-							MapUtils.setSpawn(args[2], TeamColor.BLUE, loc);
-							player.sendMessage(ChatColor.RED + "Successfully set the " + args[3].toLowerCase() + " team's spawn location in the map '" + args[2] + "'!");
+							map.setBlueSpawn(loc);
+							player.sendMessage(ChatColor.GREEN + "Successfully set the " + args[3].toLowerCase() + " team's spawn location in the map '" + args[2] + "'!");
 							
 							return;
 						} else {
@@ -60,13 +62,11 @@ public class SetSpawnCommand extends CODCommand {
 				}
 			}
 			
-			helper.unknownCommand();
-			
+			helper.wrongArguments();
 			return;
 		}
 		
 		helper.unknownCommand();
-		
 		return;
 	}
 }

@@ -30,41 +30,46 @@ public class CommandManager implements CommandExecutor {
 		
 		if(args[0].equalsIgnoreCase("help")){
 			new HelpCommand(plugin).executeCommand(sender, cmd, args);
+			return true;
 		}
 		
 		if(args[0].equalsIgnoreCase("join")){
 			if(sender.hasPermission(Localization.CMD_JOIN_PERM)){
 				if(sender instanceof Player){					
 					new JoinCommand(plugin).executeCommand(sender, cmd, args);
+					return true;
 				} else {
 					helper.noConsole();
+					return true;
 				}
 			} else {
 				helper.noPermission();
+				return true;
 			}
-			
-			return true;
 		}
 		
 		if(args[0].equalsIgnoreCase("leave")){
 			if(sender.hasPermission(Localization.CMD_LEAVE_PERM)){
 				if(sender instanceof Player){
 					new LeaveCommand(plugin).executeCommand(sender, cmd, args);
+					return true;
 				} else {
 					helper.noConsole();
+					return true;
 				}
 			} else {
 				helper.noPermission();
+				return true;
 			}
-			
-			return true;
 		}
 		
 		if(args[0].equalsIgnoreCase("gun")){
 			if(sender instanceof Player){
 				new GunCommand(plugin).executeCommand(sender, cmd, args);
+				return true;
 			} else {
 				helper.noConsole();
+				return true;
 			}
 		}
 		
@@ -74,9 +79,11 @@ public class CommandManager implements CommandExecutor {
 					new MapCommand(plugin).executeCommand(sender, cmd, args);
 				} else {
 					helper.noConsole();
+					return true;
 				}
 			} else {
 				helper.noPermission();
+				return true;
 			}
 			
 			return true;
@@ -86,32 +93,53 @@ public class CommandManager implements CommandExecutor {
 			if(sender.hasPermission(Localization.CMD_ARENA_PERM)){
 				if(sender instanceof Player){
 					new ArenaCommand(plugin).executeCommand(sender, cmd, args);
+					return true;
 				} else {
 					helper.noConsole();
+					return true;
 				}
 			} else {
 				helper.noPermission();
+				return true;
 			}
-			
-			return true;
 		}
 		
 		if(args[0].equalsIgnoreCase("setspawn")){
 			if(sender.hasPermission(Localization.CMD_SETSPAWN_PERM)){
 				if(sender instanceof Player){
 					new SetSpawnCommand(plugin).executeCommand(sender, cmd, args);
+					return true;
 				} else {
 					helper.noConsole();
+					return true;
 				}
 			} else {
 				helper.noPermission();
+				return true;
 			}
-			
-			return true;
+		}
+		
+		if(args[0].equalsIgnoreCase("start")){
+			if(sender.hasPermission(Localization.CMD_START_PERM)){
+				new StartCommand(plugin).executeCommand(sender, cmd, args);
+				return true;
+			} else {
+				helper.noPermission();
+				return true;
+			}
+		}
+		
+		if(args[0].equalsIgnoreCase("end")){
+			if(sender.hasPermission(Localization.CMD_END_PERM)){
+				new EndCommand(plugin).executeCommand(sender, cmd, args);
+				return true;
+			} else {
+				helper.noPermission();
+				return true;
+			}
 		}
 		
 		helper.unknownCommand();
-		
 		return true;
 	}
 }

@@ -2,7 +2,6 @@ package com.chasechocolate.mccod.game.arena;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -17,56 +16,97 @@ import com.chasechocolate.mccod.effects.ParticleEffects;
 import com.chasechocolate.mccod.game.GameQueue;
 import com.chasechocolate.mccod.game.GameStatus;
 import com.chasechocolate.mccod.game.GameType;
+import com.chasechocolate.mccod.game.GameUtils;
 import com.chasechocolate.mccod.game.TeamColor;
 import com.chasechocolate.mccod.game.map.Map;
+import com.chasechocolate.mccod.scoreboards.ScoreboardTools;
+import com.chasechocolate.mccod.timers.ArenaEndCountdown;
 import com.chasechocolate.mccod.timers.ArenaStartCountdown;
 import com.chasechocolate.mccod.utils.LocationUtils;
+import com.chasechocolate.mccod.utils.PlayerUtils;
+import com.chasechocolate.mccod.utils.Utilities;
 
 public class Arena {
 	private McCOD plugin;
-	
+
 	private String name;
+	
+	private List<String> allPlayers = new ArrayList<String>();
+	private List<String> onRed = new ArrayList<String>();
+	private List<String> onBlue = new ArrayList<String>();
+
+	private int redScore = 0;
+	private int blueScore = 0;
+	private int min = 1;
 	
 	private Map map;
 	private GameQueue queue;
 	private GameType gameType;
 	private GameStatus status = GameStatus.COUNTDOWN;
 	
-	private int redScore = 0;
-	private int blueScore = 0;
-	private int min = 2;
-	
-	private List<String> allPlayers = new ArrayList<String>();
-	private List<String> onRed = new ArrayList<String>();
-	private List<String> onBlue = new ArrayList<String>();
-	
-	private Random random = new Random();
-		
-	public Arena(String name){
-		this.plugin = McCOD.getInstance();
+	public Arena(String name, Map map){
 		this.name = name;
+		this.map = map;
+		this.queue = new GameQueue(this);
+		this.plugin = McCOD.getInstance();
+		
+		if(this.map.getConfigFile().exists()){
+			this.map.getConfig().set("arena", this.name);
+		}
 	}
 	
 	public void startCountdown(){
-		new ArenaStartCountdown(this, plugin, 120).startGameCountdown();
+		new ArenaStartCountdown(this, 120).startStartCountdown();
+		
+		this.status = GameStatus.COUNTDOWN;
 	}
 	
 	public void start(){
-		boolean canStart = this.getAllPlayers().size() >= min && map != null;
+		boolean canStart = (allPlayers.size() >= min || queue.getAllInQueue().size() >= min) && map != null;
 		
-		if(canStart){			
+		if(canStart){
+			//Choose the teams
 			chooseTeams();
 			
-			for(Player player : getPlayersOnTeam(TeamColor.RED)){
-				player.getPlayer().teleport(map.getTeamSpawn(TeamColor.RED));
-				
-				player.getPlayer().sendMessage(ChatColor.RED + "You are on the red team!");
+			//Set game type and status
+			gameType = GameUtils.getRandomGameType();
+			status = GameStatus.INGAME;
+			
+			//Move the players in the queue to the actual game
+			allPlayers.clear();
+			
+			for(String playerName : queue.getAllInQueue()){
+				allPlayers.add(playerName);
 			}
 			
+			//Clear all in queue
+			queue.getAllInQueue().clear();
+						
+			//Teleport red players and inform them that they are on the red team
+			for(Player player : getPlayersOnTeam(TeamColor.RED)){
+				//player.teleport(map.getTeamSpawn(TeamColor.RED));
+				PlayerUtils.respawn(player);
+				player.sendMessage(ChatColor.RED + "You are on the red team!");
+			}
+			
+			//Teleport blue players and inform them that they are on the blue team
 			for(Player player : getPlayersOnTeam(TeamColor.BLUE)){
-				player.getPlayer().teleport(map.getTeamSpawn(TeamColor.BLUE));
-				
-				player.getPlayer().sendMessage(ChatColor.BLUE + "You are on the blue team!");
+				//player.teleport(map.getTeamSpawn(TeamColor.BLUE));
+				PlayerUtils.respawn(player);
+				player.sendMessage(ChatColor.BLUE + "You are on the blue team!");
+			}
+			
+			//Show player scoreboards
+			ScoreboardTools.update();
+			
+			//Inform all players that the game has started, and tell them on which game type, which map and how many players are playing
+			broadcastMessage(ChatColor.AQUA + "Game started! " + ChatColor.GREEN + "Type: " + ChatColor.DARK_AQUA + Utilities.capitalize(gameType.toString().replaceAll("_", " ")) + ChatColor.GREEN + " | Map: " + ChatColor.DARK_AQUA + map.getName() + ChatColor.GREEN + " | Total players: " + ChatColor.DARK_AQUA + allPlayers.size());
+			
+			//Start ending timers
+			if(gameType == GameType.DEATHMATCH){
+				new ArenaEndCountdown(this, plugin.lengthDeathmatch).startEndCountdown();
+			} else {
+				new ArenaEndCountdown(this, 600).startEndCountdown();
 			}
 		} else {
 			broadcastMessage(ChatColor.RED + "Failed to start the game, restarting countdown!");
@@ -74,7 +114,9 @@ public class Arena {
 		}
 	}
 	
-	public void end(){
+	public void end(boolean force){
+		this.status = GameStatus.ENDING;
+		
 		String winningTeamName;
 		int winningTeamPoints;
 		
@@ -105,7 +147,7 @@ public class Arena {
 		}
 		
 		//Tell the players who won
-		broadcastMessage(ChatColor.GOLD + "The game has ended! Winning team: " + winningTeamName + ChatColor.GOLD + "(" + winningTeamPoints + " points)");
+		broadcastMessage(ChatColor.GOLD + "The game has" + (force ? " force " : " ") + "ended! Winning team: " + winningTeamName + " " + ChatColor.GOLD + "(" + winningTeamPoints + " points)");
 		
 		//Add some effects to show who won
 		FireworkEffectPlayer fwPlayer = new FireworkEffectPlayer();
@@ -117,9 +159,7 @@ public class Arena {
 			//Do nothing
 		}
 		
-		for(Player Player : getAllPlayers()){
-			Player player = Player.getPlayer();
-			
+		for(Player player : getAllPlayers()){
 			try{
 				ParticleEffects.HEART.sendToPlayer(player, player.getLocation(), 0, 0, 0, 1, 10);
 			} catch(Exception e){
@@ -127,11 +167,18 @@ public class Arena {
 			}
 		}
 		
+		for(Player player : getAllPlayers()){
+			ScoreboardTools.removeScoreboard(player);
+			PlayerUtils.wipe(player);
+		}
+		
+		allPlayers.clear();
+		
 		startCountdown();
 	}
 	
 	public void restart(){
-		end();
+		end(false);
 		startCountdown();
 	}
 	
@@ -139,30 +186,10 @@ public class Arena {
 		return this.name;
 	}
 	
-	public TeamColor getRandomTeamColor(){
-		boolean randomBoolean = random.nextBoolean();
-		TeamColor red = TeamColor.RED;
-		TeamColor blue = TeamColor.BLUE;
-		int redSize = getPlayersOnTeam(red).size();
-		int blueSize = getPlayersOnTeam(blue).size();
-		
-		if(redSize > blueSize){
-			return blue;
-		} else if(blueSize > redSize){
-			return red;
-		} else {
-			if(randomBoolean){
-				return red;
-			} else {
-				return blue;
-			}
-		}
-	}
-	
 	public void chooseTeams(){
 		for(String playerName : queue.getAllInQueue()){
 			Player player = Bukkit.getPlayerExact(playerName);
-			TeamColor randomTeam = getRandomTeamColor();
+			TeamColor randomTeam = GameUtils.getRandomTeamColor(this);
 			
 			addPlayerToTeam(player, randomTeam);
 		}
@@ -171,8 +198,8 @@ public class Arena {
 	public List<Player> getAllPlayers(){
 		List<Player> allPlayers = new ArrayList<Player>();
 		
-		for(Player player : allPlayers){
-			allPlayers.add(player);
+		for(String playerName : this.allPlayers){
+			allPlayers.add(Bukkit.getPlayerExact(playerName));
 		}
 		
 		return allPlayers;
@@ -184,7 +211,29 @@ public class Arena {
 	}
 	
 	public void addPlayer(Player player){
-		this.allPlayers.add(player.getName());
+		if(!(isPlaying(player))){
+			if(status == GameStatus.INGAME){
+				allPlayers.add(player.getName());
+				
+				TeamColor team = GameUtils.chooseTeam(this);
+				if(team == TeamColor.RED){
+					onRed.add(player.getName());
+				} else if(team == TeamColor.BLUE){
+					onBlue.add(player.getName());
+				}
+				
+				PlayerUtils.respawn(player);
+			} else {
+				if(!(queue.isInQueue(player))){
+					queue.addToQueue(player);
+					player.sendMessage(ChatColor.GREEN + "You have been added to the queue of this arena! You will be teleported when the game starts!");					
+				} else {
+					player.sendMessage(ChatColor.RED + "You are already in the game queue!");
+				}
+			}
+		} else {
+			player.sendMessage(ChatColor.RED + "You are already playing in the arena!");
+		}
 	}
 	
 	public void removePlayer(Player player){
@@ -211,26 +260,31 @@ public class Arena {
 	}
 	
 	public List<Player> getPlayersOnTeam(TeamColor team){
-		if(team == TeamColor.RED){
-			List<Player> playersOnRed = new ArrayList<Player>();
-			
+		List<Player> playersOnTeam = new ArrayList<Player>();
+		
+		if(team == TeamColor.RED){			
 			for(String playerName : onRed){
 				Player player = Bukkit.getPlayer(playerName);
-				playersOnRed.add(player);
-			}
-			
-			return playersOnRed;		
+				playersOnTeam.add(player);
+			}	
 		} else if(team == TeamColor.BLUE){
-			List<Player> playersOnBlue = new ArrayList<Player>();
-			
 			for(String playerName : onBlue){
 				Player player = Bukkit.getPlayer(playerName);
-				playersOnBlue.add(player);
+				playersOnTeam.add(player);
 			}
-			
-			return playersOnBlue;
-		} else {
-			return null;
+		}
+		
+		return playersOnTeam;
+	}
+	
+	public void broadcastMessage(String msg){
+		for(Player player : getAllPlayers()){
+			player.sendMessage(msg);
+		}
+		
+		for(String playerName : queue.getAllInQueue()){
+			Player player = Bukkit.getPlayerExact(playerName);
+			player.sendMessage(msg);
 		}
 	}
 	
@@ -258,14 +312,12 @@ public class Arena {
 		this.blueScore = score;
 	}
 	
-	public void broadcastMessage(String msg){
-		for(Player player : getAllPlayers()){
-			player.getPlayer().sendMessage(msg);
-		}
-	}
-	
 	public GameQueue getQueue(){
 		return this.queue;
+	}
+	
+	public void setQueue(GameQueue queue){
+		this.queue = queue;
 	}
 	
 	public GameStatus getStatus(){

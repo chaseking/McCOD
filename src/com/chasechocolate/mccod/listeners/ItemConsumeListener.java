@@ -8,8 +8,10 @@ import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
 
 import com.chasechocolate.mccod.McCOD;
+import com.chasechocolate.mccod.game.GameUtils;
 
 public class ItemConsumeListener implements Listener {
+	@SuppressWarnings("unused")
 	private McCOD plugin;
 	
 	public ItemConsumeListener(McCOD plugin){
@@ -20,7 +22,8 @@ public class ItemConsumeListener implements Listener {
 	public void onPlayerItemConsume(PlayerItemConsumeEvent event){
 		Player player = event.getPlayer();
 		ItemStack item = event.getItem();
-		if(plugin.inGame.contains(player.getName())){
+		
+		if(GameUtils.isInGame(player)){
 			if(item.getType() == Material.COOKED_BEEF || item.getType() == Material.MUSHROOM_SOUP){
 				event.setCancelled(true);
 			}

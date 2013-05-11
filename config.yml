@@ -7,3 +7,6 @@ mysql:
   database: your_database
   username: root
   password: root
+game:
+  health-regain-speed: 2
+  length-deathmatch: 300

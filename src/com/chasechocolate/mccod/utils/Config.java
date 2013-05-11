@@ -17,14 +17,12 @@ public class Config {
 	private static File configFile;
 	private static File locationsFile;
 	private static File gunsFile;
-	private static File arenasFile;
 	
 	private static File baseMapsFile;
 	
 	private static FileConfiguration config;
 	private static FileConfiguration locationsConfig;
 	private static FileConfiguration gunsConfig;
-	private static FileConfiguration arenasConfig;
 	
 	@SuppressWarnings("static-access")
 	public Config(McCOD plugin){
@@ -35,14 +33,12 @@ public class Config {
 		this.configFile = new File(plugin.getDataFolder(), "config.yml");
 		this.locationsFile = new File(plugin.getDataFolder(), "locations.yml");
 		this.gunsFile = new File(plugin.getDataFolder(), "guns.yml");
-		this.arenasFile = new File(plugin.getDataFolder(), "arenas.yml");
 		
 		this.baseMapsFile = new File(plugin.getDataFolder() + File.separator + "maps");
 		
 		this.config = YamlConfiguration.loadConfiguration(configFile);
 		this.locationsConfig = YamlConfiguration.loadConfiguration(this.locationsFile);
 		this.gunsConfig = YamlConfiguration.loadConfiguration(this.gunsFile);
-		this.arenasConfig = YamlConfiguration.loadConfiguration(this.arenasFile);
 	}
 	
 	//CREATING FILES
@@ -65,22 +61,11 @@ public class Config {
 			plugin.log("Successfully created guns.yml!");
 		}
 		
-		if(!(arenasFile.exists())){
-			plugin.log("Found no arenas.yml! Creating one for you...");
-			plugin.saveResource("arenas.yml", true);
-			plugin.log("Successfully created arenas.yml!");
-		}
-		
 		if(!(baseMapsFile.exists())){
 			plugin.log("Found no maps folder! Creating one for you...");
 			
-			try{
-				baseMapsFile.createNewFile();
-				plugin.log("Successfully created arenas.yml!");
-			} catch(IOException e){
-				e.printStackTrace();
-				plugin.log("Failed to create the maps folder!");
-			}
+			baseMapsFile.mkdirs();
+			plugin.log("Successfully created arenas.yml!");
 		}
 	}
 	
@@ -146,10 +131,6 @@ public class Config {
 		return gunsConfig;
 	}
 	
-	public static FileConfiguration getArenasConfig(){
-		return arenasConfig;
-	}
-	
 	public static FileConfiguration getFileConfig(File file){
 		return YamlConfiguration.loadConfiguration(file);
 	}
@@ -167,10 +148,6 @@ public class Config {
 		saveFile(gunsFile, gunsConfig);
 	}
 	
-	public static void saveArenasFile(){
-		saveFile(arenasFile, arenasConfig);
-	}
-	
 	public static void saveFile(File file, FileConfiguration config){
 		try{
 			config.save(file);
@@ -183,6 +160,5 @@ public class Config {
 		saveConfigFile();
 		saveLocationsFile();
 		saveGunsFile();
-		saveArenasFile();
 	}
 }

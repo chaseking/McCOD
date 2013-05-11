@@ -25,7 +25,7 @@ public class JoinCommand extends CODCommand {
 			//Usage: /cod join <arena>
 			if(args.length == 2){
 				String arenaName = args[1];
-				if(!(ArenaUtils.arenaExists(arenaName))){
+				if(!(ArenaUtils.isArena(arenaName))){
 					player.sendMessage(ChatColor.RED + "The specified arena does not exist or is not enabled!");
 					return;
 				}
@@ -41,8 +41,12 @@ public class JoinCommand extends CODCommand {
 				}
 				
 				Arena arena = ArenaUtils.getArena(arenaName);
-				arena.addPlayer(player);
-			} else {			
+
+				if(arena != null){
+					arena.addPlayer(player);
+					return;
+				}
+			} else {
 				helper.wrongArguments();
 				return;
 			}

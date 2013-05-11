@@ -7,8 +7,8 @@ import org.bukkit.entity.Player;
 
 import com.chasechocolate.mccod.McCOD;
 import com.chasechocolate.mccod.game.GameUtils;
-import com.chasechocolate.mccod.game.Gun;
-import com.chasechocolate.mccod.utils.GunUtils;
+import com.chasechocolate.mccod.game.gun.Gun;
+import com.chasechocolate.mccod.game.gun.GunUtils;
 
 public class GunCommand extends CODCommand {
 	public GunCommand(McCOD plugin){
@@ -29,7 +29,7 @@ public class GunCommand extends CODCommand {
 					
 					if(GameUtils.isInGame(player)){
 						GunUtils.setPlayerGun(player, gun);
-						player.sendMessage(ChatColor.RED + "You have respawned with the gun: " + args[1] + "!");
+						player.sendMessage(ChatColor.GREEN + "You have respawned with the gun: " + args[1] + "!");
 						return;
 					} else {
 						player.sendMessage(ChatColor.RED + "You must be in a game to choose a gun!");

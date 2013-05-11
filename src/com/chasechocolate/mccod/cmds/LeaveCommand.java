@@ -16,6 +16,8 @@ public class LeaveCommand extends CODCommand {
 	
 	@Override
 	public void executeCommand(CommandSender sender, Command cmd, String[] args){
+		CommandHelper helper = new CommandHelper(sender, cmd);
+		
 		if(sender instanceof Player){
 			Player player = (Player) sender;
 			
@@ -26,6 +28,9 @@ public class LeaveCommand extends CODCommand {
 				player.sendMessage(ChatColor.RED + "You are currently not in a game!");
 				return;
 			}
+		} else {
+			helper.noConsole();
+			return;
 		}
 	}
 }

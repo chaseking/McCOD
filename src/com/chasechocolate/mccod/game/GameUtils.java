@@ -19,6 +19,7 @@ import com.chasechocolate.mccod.utils.Config;
 import com.chasechocolate.mccod.utils.PlayerUtils;
 
 public class GameUtils {
+	@SuppressWarnings("unused")
 	private static McCOD plugin;
 	
 	private static Random random = new Random();
@@ -82,9 +83,9 @@ public class GameUtils {
 			int index = random.nextInt(size);
 			String nextMap = maps[index];
 			
-			for(Arena arena : ArenaUtils.getCurrentArenas()){
+			for(Arena arena : ArenaUtils.getAllArenas()){
 				if(arena.getMap().getName().equalsIgnoreCase(nextMap)){
-					return getRandomMap();
+					return getRandomMap(); //Method-ception
 				}
 			}
 			
@@ -94,30 +95,56 @@ public class GameUtils {
 		}
 	}
 	
-	public static String getMapName(Arena arena){
-		String name = arena.getMap().getName();
-		return name;
-	}
-	
 	public static Location getSpawnLocation(String map, TeamColor team){
 		if(Config.getLocationsFile().exists()){
 			String teamColor = team.toString().toLowerCase();
 			ConfigurationSection section = Config.getLocationsConfig().getConfigurationSection("maps." + map + "." + teamColor);
 			
-			World world = plugin.getServer().getWorld(section.getString("world"));
-			int x = section.getInt("x");
-			int y = section.getInt("y");
-			int z = section.getInt("z");
-			float yaw = Float.parseFloat(section.getString("yaw"));
-			float pitch = Float.parseFloat(section.getString("pitch"));
-			
-			Location spawn = new Location(world, x, y, z, yaw, pitch);
-			
-			return spawn;
+			if(section != null){
+				World world = Bukkit.getWorld(section.getString("world"));
+				int x = section.getInt("x");
+				int y = section.getInt("y");
+				int z = section.getInt("z");
+				float yaw = Float.parseFloat(section.getString("yaw"));
+				float pitch = Float.parseFloat(section.getString("pitch"));
+				
+				Location spawn = new Location(world, x, y, z, yaw, pitch);
+				
+				return spawn;
+			}
 		}
 		
 		World world = Bukkit.getWorlds().get(0);
 		Location spawn = world.getSpawnLocation();
 		return spawn;
+	}
+	
+	public static GameType getRandomGameType(){
+		GameType[] allTypes = GameType.values();
+		int size = allTypes.length;
+		int index = random.nextInt(size);
+		GameType type = allTypes[index];
+		
+		return type;
+	}
+	
+	public static TeamColor getRandomTeamColor(Arena arena){
+		boolean randomBoolean = random.nextBoolean();
+		TeamColor red = TeamColor.RED;
+		TeamColor blue = TeamColor.BLUE;
+		int redSize = arena.getPlayersOnTeam(red).size();
+		int blueSize = arena.getPlayersOnTeam(blue).size();
+		
+		if(redSize > blueSize){
+			return blue;
+		} else if(blueSize > redSize){
+			return red;
+		} else {
+			if(randomBoolean){
+				return red;
+			} else {
+				return blue;
+			}
+		}
 	}
 }

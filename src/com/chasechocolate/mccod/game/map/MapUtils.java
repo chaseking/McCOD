@@ -3,109 +3,105 @@ package com.chasechocolate.mccod.game.map;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-
-import com.chasechocolate.mccod.game.TeamColor;
+import com.chasechocolate.mccod.game.arena.Arena;
+import com.chasechocolate.mccod.game.arena.ArenaUtils;
 import com.chasechocolate.mccod.utils.Config;
+import com.sk89q.worldedit.bukkit.selections.Selection;
 
 public class MapUtils {
 	private static File baseMapsFile;
 	
-	private static List<String> mapNames = new ArrayList<String>();
-	
-	public static HashMap<String, File> mapFiles = new HashMap<String, File>();
-	public static HashMap<String, FileConfiguration> mapConfigs = new HashMap<String, FileConfiguration>();
+	private static List<Map> allMaps = new ArrayList<Map>();
 	
 	@SuppressWarnings("static-access")
 	public MapUtils(){
 		this.baseMapsFile = Config.getBaseMapsFile();;
 		
-		mapNames.clear();
+		loadMaps();
+	}
+	
+	public static void loadMaps(){
+		allMaps.clear();
 		
 		for(File mapFile : baseMapsFile.listFiles()){
-			String mapName = mapFile.getName().replaceAll(".yml", "");
-			
-			mapNames.add(mapName);
-			mapFiles.put(mapName, mapFile);
+			if(!(mapFile.getName().startsWith("."))){
+				String mapName = mapFile.getName().replaceAll(".yml", "");
+				Map map = new Map(mapName);
+				
+				allMaps.add(map);
+			}
 		}
 	}
 	
-	public static File getMapFile(String mapName){
-		if(isMap(mapName)){
-			File mapFile = mapFiles.get(mapName);
-			return mapFile;
-		} else {
-			return null;
-		}
+	public static File getBaseMapsFile(){
+		return baseMapsFile;
 	}
 	
-	public static FileConfiguration getMapConfig(String mapName){
-		if(isMap(mapName)){
-			FileConfiguration mapConfig = mapConfigs.get(mapName);
-			return mapConfig;
-		} else {
-			return null;
+	public static boolean isMap(String mapName){
+		for(Map map : allMaps){
+			if(map.getName().equalsIgnoreCase(mapName)){
+				return true;
+			}
 		}
-	}
-	
-	public static boolean isMap(String map){
-		boolean isMap = mapNames.contains(map);
 		
-		return isMap;
+		return false;
 	}
 	
-	public static void createMap(String map){
-		if(!(isMap(map))){
-			getMapConfig(map).set("maps." + map, "");
-			saveMapsConfig(map);
+	public static Map getMap(String mapName){
+		Map map = null;
+		
+		if(isMap(mapName)){
+			for(Map allTheMaps : allMaps){
+				if(allTheMaps.getName().equalsIgnoreCase(mapName)){
+					map = allTheMaps;
+				}
+			}
+		}
+		
+		return map;
+	}
+	
+	public static boolean isMapUsed(String mapName){
+		boolean used = false;
+		
+		for(Arena arena : ArenaUtils.getAllArenas()){
+			if(arena.getMap().getName().equalsIgnoreCase(mapName)){
+				used = true;
+			}
+		}
+		
+		return used;
+	}
+	
+	public static void createMap(String mapName, Selection selection){
+		if(!(isMap(mapName))){
+			Map map = new Map(mapName);
+			map.setPoint1(selection.getMaximumPoint());
+			map.setPoint2(selection.getMinimumPoint());
+			
+			saveMapsConfig(mapName);
 		}
 	}
 	
 	public static void deleteMap(String mapName){
 		if(isMap(mapName)){
-			if(getMapFile(mapName) != null){
-				getMapFile(mapName).delete();
-			}
+			Map map = getMap(mapName);
+			map.getConfigFile().delete();
 		}
 	}
-	
-	public static void setSpawn(String mapName, TeamColor team, Location loc){
-		if(isMap(mapName)){
-			if(getMapConfig(mapName) != null){
-				FileConfiguration mapsConfig = getMapConfig(mapName);
-				String teamName = team.toString().toLowerCase();
-				
-				String world = loc.getWorld().getName();
-				int x = loc.getBlockX();
-				int y = loc.getBlockY();
-				int z = loc.getBlockZ();
-				float yaw = loc.getYaw();
-				float pitch = loc.getPitch();
-				
-				mapsConfig.set(mapName + "." + teamName + ".world", world);
-				mapsConfig.set(mapName + "." + teamName + ".x", x);
-				mapsConfig.set(mapName + "." + teamName + ".y", y);
-				mapsConfig.set(mapName + "." + teamName + ".z", z);
-				mapsConfig.set(mapName + "." + teamName + ".yaw", yaw);
-				mapsConfig.set(mapName + "." + teamName + ".pitch", pitch);
-				
-				saveMapsConfig(mapName);
-			}
-		}
-	}
-	
 	
 	
 	public static void saveMapsConfig(String mapName){
-		try{
-			YamlConfiguration.loadConfiguration(mapFiles.get(mapName)).save(mapFiles.get(mapName));
-		} catch(IOException e){
-			e.printStackTrace();
+		if(isMap(mapName)){
+			Map map = getMap(mapName);
+			
+			try{
+				map.getConfig().save(map.getConfigFile());
+			} catch(IOException e){
+				e.printStackTrace();
+			}
 		}
 	}
 }

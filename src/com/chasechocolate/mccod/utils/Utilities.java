@@ -30,4 +30,18 @@ public class Utilities {
 			return false;
 		}
 	}
+	
+	public static String capitalize(String text){
+		String firstLetter = text.substring(0, 1).toUpperCase();
+		String remainingLetters = text.substring(1).toLowerCase();
+		String capitalized = firstLetter + remainingLetters;
+		
+		return capitalized;
+	}
+	
+	public static int round(int number, int multiple){
+		int round = (int) Math.ceil(number/multiple) * multiple;
+		
+		return round;
+	}
 }

@@ -30,7 +30,5 @@ public abstract class CODClass {
 		this.name = name;
 	}
 	
-	public void apply(Player player){
-		
-	}
+	public abstract void apply(Player player);
 }
